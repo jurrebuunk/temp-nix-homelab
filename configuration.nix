@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ./modules/docker.nix
+    ./modules/lxc.nix
   ];
 
   # Bootloader.
