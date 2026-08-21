@@ -4,6 +4,7 @@
   imports = [
     ./hardware-configuration.nix
     ./modules/docker.nix
+    ./modules/lan-bridge.nix
     ./modules/lxc.nix
   ];
 
@@ -11,31 +12,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking = {
-    hostName = "nixos-server";
-
-    networkmanager = {
-      enable = true;
-
-      ensureProfiles.profiles.static-lan = {
-        connection = {
-          id = "static-lan";
-          type = "ethernet";
-          autoconnect = true;
-          autoconnect-priority = 100;
-        };
-
-        ipv4 = {
-          method = "manual";
-          addresses = "192.168.2.31/24";
-          gateway = "192.168.2.254";
-          dns = "1.1.1.1";
-        };
-
-        ipv6.method = "auto";
-      };
-    };
-  };
+  networking.hostName = "nixos-server";
 
   time.timeZone = "Europe/Amsterdam";
 
