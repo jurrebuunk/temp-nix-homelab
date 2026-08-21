@@ -23,10 +23,10 @@
       Kind = "bridge";
     };
 
-    # Attach the physical LAN interface to br0. This matches normal Ethernet
-    # interface names like eno1, enp1s0, enx..., etc.
+    # Attach the physical LAN interface to br0. Match both predictable Ethernet
+    # names (eno1/enp*/enx*) and legacy names (eth0).
     networks."10-lan-uplink" = {
-      matchConfig.Name = "en*";
+      matchConfig.Name = "en* eth*";
       networkConfig = {
         Bridge = "br0";
         LinkLocalAddressing = "no";
