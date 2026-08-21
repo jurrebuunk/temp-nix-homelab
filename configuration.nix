@@ -13,8 +13,27 @@
   networking = {
     hostName = "nixos-server";
 
-    # Use NetworkManager for DHCP and basic network management.
-    networkmanager.enable = true;
+    networkmanager = {
+      enable = true;
+
+      ensureProfiles.profiles.static-lan = {
+        connection = {
+          id = "static-lan";
+          type = "ethernet";
+          autoconnect = true;
+          autoconnect-priority = 100;
+        };
+
+        ipv4 = {
+          method = "manual";
+          addresses = "192.168.2.31/24";
+          gateway = "192.168.2.254";
+          dns = "1.1.1.1";
+        };
+
+        ipv6.method = "auto";
+      };
+    };
   };
 
   time.timeZone = "Europe/Amsterdam";
