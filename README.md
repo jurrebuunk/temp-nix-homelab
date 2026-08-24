@@ -1,210 +1,62 @@
-# Temporary NixOS Homelab Server
+# temp-nix-homelab
 
-NixOS configuration for my temporary homelab server while i maintain the main network rack.
+Temporary NixOS homelab server config.
 
-## Structure
+## What it does
 
-```text
-.
-├── configuration.nix
-├── hardware-configuration.nix
-├── flake.nix
-├── flake.lock
-├── modules/
-│   ├── docker.nix
-│   ├── lan-bridge.nix
-│   └── lxc.nix
-└── .github/
-    └── workflows/
-        └── nixos-check.yml
-```
+- Builds `nixosConfigurations.server` for `nixos-server`.
+- Uses `br0` on `192.168.2.31/24`.
+- Enables Docker, Docker Compose, and LXC.
+- Auto-updates from `main` every 5 minutes.
+- Runs Compose stacks from `services/<app>/compose.yml` as systemd units.
 
-## Server
-
-Flake target:
-
-```text
-server
-```
-
-Hostname:
-
-```text
-nixos-server
-```
-
-Network:
-
-```text
-Interface: br0
-IP:        192.168.2.31/24
-Gateway:   192.168.2.254
-DNS:       192.168.2.254, 1.1.1.1
-```
-
-The physical Ethernet interface is attached to `br0`. Docker and LXC are enabled.
-
-## Initial deployment
-
-From the server:
+## Deploy now
 
 ```bash
-sudo nixos-rebuild switch --flake github:JurreBuunk/temp-nix-homelab#server
+sudo nixos-rebuild switch --refresh --flake github:JurreBuunk/temp-nix-homelab/main#server
 ```
 
-Or clone the repository:
+## Compose services
+
+Add stacks like this:
+
+```text
+services/<app>/compose.yml
+```
+
+NixOS creates a systemd service named:
+
+```text
+compose-<app>.service
+```
+
+Example checks:
 
 ```bash
-git clone https://github.com/jurrebuunk/temp-nix-homelab.git
-cd temp-nix-homelab
-
-sudo nixos-rebuild switch --flake .#server
+sudo systemctl status compose-cloudflared.service
+sudo systemctl status compose-compose-test.service
+docker ps
 ```
 
-## Test configuration
+Secrets are loaded from optional env files:
 
-Build without activating:
+```text
+/etc/compose/<app>.env
+```
+
+For Cloudflare Tunnel:
 
 ```bash
-sudo nixos-rebuild build --flake .#server
+sudo install -d -m 0750 /etc/compose
+printf 'TUNNEL_TOKEN=%s\n' '<token>' | sudo tee /etc/compose/cloudflared.env >/dev/null
+sudo chmod 600 /etc/compose/cloudflared.env
 ```
 
-Check the flake:
+## Validate locally
 
 ```bash
 nix flake check
-```
-
-## Apply changes manually
-
-```bash
-git pull
-sudo nixos-rebuild switch --flake .#server
-```
-
-To deploy directly from GitHub:
-
-```bash
-sudo nixos-rebuild switch --flake github:JurreBuunk/temp-nix-homelab/main#server
-```
-
-## Automatic deployment
-
-The server checks:
-
-```text
-github:JurreBuunk/temp-nix-homelab/main#server
-```
-
-every 5 minutes.
-
-If the configuration changed and builds successfully, NixOS switches to the new configuration.
-
-Check the timer:
-
-```bash
-systemctl list-timers | grep nixos-upgrade
-```
-
-Run it manually:
-
-```bash
-sudo systemctl start nixos-upgrade.service
-```
-
-View logs:
-
-```bash
-journalctl -u nixos-upgrade.service
-```
-
-## CI
-
-GitHub Actions runs on:
-
-* pushes to `main`
-* pull requests targeting `main`
-
-It runs:
-
-```bash
-nix flake check
-```
-
-and builds:
-
-```bash
 nix build .#nixosConfigurations.server.config.system.build.toplevel --no-link
 ```
 
-Only merge changes that pass CI.
-
-## Docker
-
-Docker and Docker Compose are installed.
-
-```bash
-docker --version
-docker compose version
-```
-
-The `jurre` user is in the `docker` group.
-
-Unused Docker data older than 7 days is pruned weekly.
-
-## LXC
-
-LXC is installed and configured to use:
-
-```text
-br0
-```
-
-Containers can therefore connect directly to the LAN.
-
-List containers:
-
-```bash
-lxc-ls --fancy
-```
-
-Start a container:
-
-```bash
-lxc-start -n <name>
-```
-
-Stop it:
-
-```bash
-lxc-stop -n <name>
-```
-
-Attach:
-
-```bash
-lxc-attach -n <name>
-```
-
-## Updating nixpkgs
-
-Update `flake.lock`:
-
-```bash
-nix flake update
-```
-
-Test:
-
-```bash
-nix flake check
-sudo nixos-rebuild build --flake .#server
-```
-
-Then commit and push:
-
-```bash
-git add flake.lock
-git commit -m "Update nixpkgs"
-git push
-```
+CI also validates all `services/**/compose.yml` and `services/**/compose.yaml` files.
