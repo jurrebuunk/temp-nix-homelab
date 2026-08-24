@@ -1,0 +1,33 @@
+name: NixOS Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate NixOS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check flake
+        run: nix flake check
+
+      - name: Build server configuration
+        run: |
+          nix build \
+            .#nixosConfigurations.server.config.system.build.toplevel \
+            --no-link
