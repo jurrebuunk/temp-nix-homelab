@@ -1,6 +1,6 @@
-# NixOS Homelab Server
+# Temporary NixOS Homelab Server
 
-NixOS configuration for the homelab server.
+NixOS configuration for my temporary homelab server while i maintain the main network rack.
 
 ## Structure
 
