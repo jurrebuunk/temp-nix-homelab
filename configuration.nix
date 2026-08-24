@@ -64,6 +64,15 @@
     openFirewall = true;
   };
 
+  system.autoUpgrade = {
+    enable = true;
+    flake = "github:JurreBuunk/temp-nix-homelab/main#server";
+    operation = "switch";
+    dates = "*:0/5";
+    randomizedDelaySec = "0";
+    allowReboot = false;
+  };
+
   environment.systemPackages = with pkgs; [
     curl
     git
