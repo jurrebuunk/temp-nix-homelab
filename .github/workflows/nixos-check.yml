@@ -18,6 +18,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Validate Docker Compose files
+        run: |
+          shopt -s globstar nullglob
+          files=(services/**/compose.yml services/**/compose.yaml)
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No Compose files found"
+            exit 0
+          fi
+
+          for file in "${files[@]}"; do
+            echo "Validating $file"
+            TUNNEL_TOKEN=dummy docker compose --file "$file" config --quiet
+          done
+
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
