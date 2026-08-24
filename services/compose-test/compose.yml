@@ -1,0 +1,7 @@
+services:
+  compose-test:
+    image: traefik/whoami:v1.10
+    container_name: compose-test
+    restart: unless-stopped
+    ports:
+      - "8099:80"
