@@ -80,6 +80,7 @@
     rsync
     unzip
     wget
+    vim
   ];
 
   system.stateVersion = "26.05";
