@@ -1,6 +1,6 @@
 # Forgejo
 
-Forgejo with a separate PostgreSQL container and a pre-registered Forgejo Actions runner.
+Forgejo branded as Buunk, with Flexoki theme, separate PostgreSQL container, and a pre-registered Forgejo Actions runner.
 
 Default ports:
 

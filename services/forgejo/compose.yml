@@ -17,6 +17,21 @@ services:
       timeout: 5s
       retries: 10
 
+  forgejo-theme:
+    image: codeberg.org/forgejo/forgejo:12
+    restart: "no"
+    volumes:
+      - forgejo-data:/data
+      - ./theme:/theme:ro
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        mkdir -p /data/gitea/public/assets/css
+        cp -f /theme/theme-flexoki-*.css /data/gitea/public/assets/css/
+        chown -R git:git /data/gitea/public/assets/css
+
   forgejo:
     image: codeberg.org/forgejo/forgejo:12
     container_name: forgejo
@@ -24,9 +39,12 @@ services:
     depends_on:
       forgejo-db:
         condition: service_healthy
+      forgejo-theme:
+        condition: service_completed_successfully
     environment:
       USER_UID: ${FORGEJO_UID:-1000}
       USER_GID: ${FORGEJO_GID:-1000}
+      APP_NAME: Buunk
       INSTALL_LOCK: "true"
       DOMAIN: ${FORGEJO_DOMAIN:-localhost}
       SSH_DOMAIN: ${FORGEJO_SSH_DOMAIN:-localhost}
@@ -48,6 +66,10 @@ services:
       GITEA__database__NAME: forgejo
       GITEA__database__USER: forgejo
       GITEA__database__PASSWD: ${FORGEJO_DB_PASSWORD:-forgejo-change-me}
+      GITEA__DEFAULT__APP_NAME: Buunk
+      GITEA__DEFAULT__APP_SLOGAN: "Git and CI for Buunk"
+      GITEA__ui__THEMES: forgejo-auto,forgejo-light,forgejo-dark,flexoki-auto,flexoki-light,flexoki-dark
+      GITEA__ui__DEFAULT_THEME: flexoki-auto
       GITEA__actions__ENABLED: "true"
       GITEA__repository__ENABLE_PUSH_CREATE_USER: "true"
       GITEA__repository__ENABLE_PUSH_CREATE_ORG: "true"
