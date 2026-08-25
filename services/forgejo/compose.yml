@@ -1,0 +1,164 @@
+services:
+  forgejo-db:
+    image: postgres:16-alpine
+    container_name: forgejo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: forgejo
+      POSTGRES_USER: forgejo
+      POSTGRES_PASSWORD: ${FORGEJO_DB_PASSWORD:-forgejo-change-me}
+    volumes:
+      - forgejo-db:/var/lib/postgresql/data
+    networks:
+      - forgejo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forgejo -d forgejo"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:12
+    container_name: forgejo
+    restart: unless-stopped
+    depends_on:
+      forgejo-db:
+        condition: service_healthy
+    environment:
+      USER_UID: ${FORGEJO_UID:-1000}
+      USER_GID: ${FORGEJO_GID:-1000}
+      INSTALL_LOCK: "true"
+      DOMAIN: ${FORGEJO_DOMAIN:-localhost}
+      SSH_DOMAIN: ${FORGEJO_SSH_DOMAIN:-localhost}
+      SSH_PORT: ${FORGEJO_SSH_PORT:-2222}
+      SSH_LISTEN_PORT: "22"
+      ROOT_URL: ${FORGEJO_ROOT_URL:-http://localhost:3000/}
+      DB_TYPE: postgres
+      DB_HOST: forgejo-db:5432
+      DB_NAME: forgejo
+      DB_USER: forgejo
+      DB_PASSWD: ${FORGEJO_DB_PASSWORD:-forgejo-change-me}
+      GITEA__server__DOMAIN: ${FORGEJO_DOMAIN:-localhost}
+      GITEA__server__SSH_DOMAIN: ${FORGEJO_SSH_DOMAIN:-localhost}
+      GITEA__server__SSH_PORT: ${FORGEJO_SSH_PORT:-2222}
+      GITEA__server__SSH_LISTEN_PORT: "22"
+      GITEA__server__ROOT_URL: ${FORGEJO_ROOT_URL:-http://localhost:3000/}
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: forgejo-db:5432
+      GITEA__database__NAME: forgejo
+      GITEA__database__USER: forgejo
+      GITEA__database__PASSWD: ${FORGEJO_DB_PASSWORD:-forgejo-change-me}
+      GITEA__actions__ENABLED: "true"
+      GITEA__repository__ENABLE_PUSH_CREATE_USER: "true"
+      GITEA__repository__ENABLE_PUSH_CREATE_ORG: "true"
+      GITEA__service__DISABLE_REGISTRATION: ${FORGEJO_DISABLE_REGISTRATION:-false}
+    volumes:
+      - forgejo-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${FORGEJO_HTTP_BIND:-3000}:3000"
+      - "${FORGEJO_SSH_BIND:-2222}:22"
+    networks:
+      - forgejo
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  forgejo-actions-register:
+    image: codeberg.org/forgejo/forgejo:12
+    restart: on-failure
+    depends_on:
+      forgejo:
+        condition: service_healthy
+    volumes:
+      - forgejo-data:/data
+    networks:
+      - forgejo
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        secret_file=/data/actions-runner-secret
+
+        if [ ! -s "$$secret_file" ]; then
+          su-exec git forgejo forgejo-cli actions generate-secret > "$$secret_file"
+          chown git:git "$$secret_file"
+          chmod 600 "$$secret_file"
+        fi
+
+        su-exec git forgejo --config /data/gitea/conf/app.ini --work-path /data/gitea forgejo-cli actions register \
+          --secret-file "$$secret_file" \
+          --name docker-runner \
+          --labels "docker:docker://node:20-bookworm,ubuntu-latest:docker://node:20-bookworm,self-hosted:docker://node:20-bookworm,docker-cli:docker://docker:27-cli"
+
+  forgejo-runner:
+    image: code.forgejo.org/forgejo/runner:13
+    container_name: forgejo-runner
+    restart: unless-stopped
+    # Needs access to /var/run/docker.sock to start job containers.
+    user: "0:0"
+    depends_on:
+      forgejo:
+        condition: service_healthy
+      forgejo-actions-register:
+        condition: service_completed_successfully
+    volumes:
+      - forgejo-runner:/data
+      - forgejo-data:/forgejo-data:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - forgejo
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        cd /data
+
+        if [ ! -s config.yml ]; then
+          cat > config.yml <<'EOF'
+        log:
+          level: info
+          job_level: info
+        runner:
+          file: /data/.runner
+          capacity: 2
+          labels:
+            - docker:docker://node:20-bookworm
+            - ubuntu-latest:docker://node:20-bookworm
+            - self-hosted:docker://node:20-bookworm
+            - docker-cli:docker://docker:27-cli
+        cache:
+          enabled: true
+        container:
+          network: forgejo
+        EOF
+        fi
+
+        while [ ! -s /forgejo-data/actions-runner-secret ]; do
+          sleep 2
+        done
+
+        if [ ! -s /data/.runner ]; then
+          forgejo-runner create-runner-file \
+            --connect \
+            --instance http://forgejo:3000 \
+            --name docker-runner \
+            --secret "$$(cat /forgejo-data/actions-runner-secret)"
+        fi
+
+        exec forgejo-runner daemon --config /data/config.yml
+
+volumes:
+  forgejo-data:
+  forgejo-db:
+  forgejo-runner:
+
+networks:
+  forgejo:
+    name: forgejo

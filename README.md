@@ -30,11 +30,13 @@ NixOS creates a systemd service named:
 compose-<app>.service
 ```
 
+Current stacks include Cloudflare Tunnel and Forgejo.
+
 Example checks:
 
 ```bash
 sudo systemctl status compose-cloudflared.service
-sudo systemctl status compose-compose-test.service
+sudo systemctl status compose-forgejo.service
 docker ps
 ```
 
