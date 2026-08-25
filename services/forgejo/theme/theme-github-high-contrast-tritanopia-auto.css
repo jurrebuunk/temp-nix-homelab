@@ -1,0 +1,3 @@
+@import "./theme-github-high-contrast-tritanopia-dark.css" (prefers-color-scheme: dark);
+@import "./theme-github-high-contrast-tritanopia-light.css" (prefers-color-scheme: light);
+gitea-theme-meta-info{--theme-color-scheme:auto;--theme-display-name:GitHub High Contrast Auto Tritanopia;--theme-colorblind-type:blue-yellow}

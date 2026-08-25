@@ -29,7 +29,7 @@ services:
       - |
         set -eu
         mkdir -p /data/gitea/public/assets/css
-        cp -f /theme/theme-flexoki-*.css /data/gitea/public/assets/css/
+        cp -f /theme/*.css /data/gitea/public/assets/css/
         chown -R git:git /data/gitea/public/assets/css
 
   forgejo:
@@ -68,7 +68,7 @@ services:
       GITEA__database__PASSWD: ${FORGEJO_DB_PASSWORD:-forgejo-change-me}
       GITEA__DEFAULT__APP_NAME: Buunk
       GITEA__DEFAULT__APP_SLOGAN: "Git and CI for Buunk"
-      GITEA__ui__THEMES: forgejo-auto,forgejo-light,forgejo-dark,flexoki-auto,flexoki-light,flexoki-dark
+      GITEA__ui__THEMES: forgejo-auto,forgejo-light,forgejo-dark,flexoki-auto,flexoki-light,flexoki-dark,github-auto,github-light,github-dark,github-soft-dark,github-colorblind-auto,github-colorblind-light,github-colorblind-dark,github-tritanopia-auto,github-tritanopia-light,github-tritanopia-dark,github-high-contrast-auto,github-high-contrast-light,github-high-contrast-dark,github-high-contrast-soft-dark,github-high-contrast-colorblind-auto,github-high-contrast-colorblind-light,github-high-contrast-colorblind-dark,github-high-contrast-tritanopia-auto,github-high-contrast-tritanopia-light,github-high-contrast-tritanopia-dark,github-gitea-auto,github-gitea-light,github-gitea-dark,github-pink-auto,github-pink-light,github-pink-dark,github-pink-soft-dark,github-catppuccin-auto,github-catppuccin-latte,github-catppuccin-frappe,github-catppuccin-macchiato,github-catppuccin-mocha
       GITEA__ui__DEFAULT_THEME: flexoki-auto
       GITEA__actions__ENABLED: "true"
       GITEA__repository__ENABLE_PUSH_CREATE_USER: "true"

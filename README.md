@@ -30,7 +30,7 @@ NixOS creates a systemd service named:
 compose-<app>.service
 ```
 
-Current stacks include Cloudflare Tunnel and Buunk-branded Forgejo.
+Current stacks include Cloudflare Tunnel and Buunk-branded Forgejo with Flexoki/GitHub themes.
 
 Example checks:
 
