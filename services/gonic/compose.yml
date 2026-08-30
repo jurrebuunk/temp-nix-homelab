@@ -30,7 +30,9 @@ services:
     privileged: true
     environment:
       NFS_DISABLE_VERSION_3: "1"
-      NFS_EXPORT_0: "/exports/music ${GONIC_NFS_ALLOWED:-192.168.2.0/24}(rw,fsid=0,sync,no_subtree_check,insecure)"
+      # Docker's port proxy can make clients appear from the bridge gateway
+      # instead of their LAN IP, so default to '*' and rely on the host firewall.
+      NFS_EXPORT_0: "/exports/music ${GONIC_NFS_ALLOWED:-*}(rw,fsid=0,sync,no_subtree_check,insecure,no_root_squash)"
     volumes:
       - /srv/gonic/music:/exports/music
       - /run/booted-system/kernel-modules/lib/modules:/lib/modules:ro
