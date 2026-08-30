@@ -8,6 +8,7 @@ services:
       GONIC_LISTEN_ADDR: ":4747"
       GONIC_MUSIC_PATH: /music
       GONIC_PODCAST_PATH: /podcasts
+      GONIC_PLAYLISTS_PATH: /playlists
       GONIC_CACHE_PATH: /cache
       GONIC_DB_PATH: /data/gonic.db
       GONIC_SCAN_INTERVAL: "${GONIC_SCAN_INTERVAL:-60}"
@@ -18,6 +19,7 @@ services:
       - /srv/gonic/cache:/cache
       - /srv/gonic/music:/music:ro
       - /srv/gonic/podcasts:/podcasts
+      - /srv/gonic/playlists:/playlists
     ports:
       - "${GONIC_HTTP_BIND:-4747}:4747"
 
@@ -31,6 +33,6 @@ services:
       NFS_EXPORT_0: "/exports/music ${GONIC_NFS_ALLOWED:-192.168.2.0/24}(rw,fsid=0,sync,no_subtree_check)"
     volumes:
       - /srv/gonic/music:/exports/music
-      - /lib/modules:/lib/modules:ro
+      - /run/booted-system/kernel-modules/lib/modules:/lib/modules:ro
     ports:
       - "${GONIC_NFS_BIND:-2049}:2049/tcp"

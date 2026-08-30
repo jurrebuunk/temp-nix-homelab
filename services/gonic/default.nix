@@ -8,10 +8,14 @@
     "d /srv/gonic/cache 0755 1000 1000 -"
     "d /srv/gonic/music 0775 1000 1000 -"
     "d /srv/gonic/podcasts 0775 1000 1000 -"
+    "d /srv/gonic/playlists 0775 1000 1000 -"
   ];
 
-  # The NFS server runs in Docker but still uses the host nfsd kernel module.
-  boot.kernelModules = [ "nfsd" ];
+  # The NFS server runs in Docker but still uses host NFS kernel modules.
+  boot.kernelModules = [
+    "nfs"
+    "nfsd"
+  ];
 
   networking.firewall.allowedTCPPorts = [
     4747
