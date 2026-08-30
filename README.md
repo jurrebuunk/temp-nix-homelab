@@ -30,13 +30,14 @@ NixOS creates a systemd service named:
 compose-<app>.service
 ```
 
-Current stacks include Cloudflare Tunnel and Buunk-branded Forgejo with Flexoki/GitHub themes.
+Current stacks include Cloudflare Tunnel, Buunk-branded Forgejo with Flexoki/GitHub themes, and Gonic with an NFS-exported music library.
 
 Example checks:
 
 ```bash
 sudo systemctl status compose-cloudflared.service
 sudo systemctl status compose-forgejo.service
+sudo systemctl status compose-gonic.service
 docker ps
 ```
 

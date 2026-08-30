@@ -7,6 +7,7 @@
     ./modules/compose-stacks.nix
     ./modules/lan-bridge.nix
     ./modules/lxc.nix
+    ./services/gonic
   ];
 
   # Bootloader.
