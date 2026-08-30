@@ -4,19 +4,15 @@ services:
     container_name: gonic
     restart: unless-stopped
     user: "${GONIC_UID:-1000}:${GONIC_GID:-1000}"
-    command:
-      - -listen-addr
-      - :4747
-      - -music-path
-      - /music
-      - -podcast-path
-      - /podcasts
-      - -cache-path
-      - /cache
-      - -db-path
-      - /data/gonic.db
-      - -scan-interval
-      - ${GONIC_SCAN_INTERVAL:-60}
+    environment:
+      GONIC_LISTEN_ADDR: ":4747"
+      GONIC_MUSIC_PATH: /music
+      GONIC_PODCAST_PATH: /podcasts
+      GONIC_CACHE_PATH: /cache
+      GONIC_DB_PATH: /data/gonic.db
+      GONIC_SCAN_INTERVAL: "${GONIC_SCAN_INTERVAL:-60}"
+      GONIC_SCAN_AT_START_ENABLED: "true"
+      GONIC_SCAN_WATCHER_ENABLED: "true"
     volumes:
       - /srv/gonic/data:/data
       - /srv/gonic/cache:/cache
@@ -35,5 +31,6 @@ services:
       NFS_EXPORT_0: "/exports/music ${GONIC_NFS_ALLOWED:-192.168.2.0/24}(rw,fsid=0,sync,no_subtree_check)"
     volumes:
       - /srv/gonic/music:/exports/music
+      - /lib/modules:/lib/modules:ro
     ports:
       - "${GONIC_NFS_BIND:-2049}:2049/tcp"
