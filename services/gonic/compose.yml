@@ -30,7 +30,7 @@ services:
     privileged: true
     environment:
       NFS_DISABLE_VERSION_3: "1"
-      NFS_EXPORT_0: "/exports/music ${GONIC_NFS_ALLOWED:-192.168.2.0/24}(rw,fsid=0,sync,no_subtree_check)"
+      NFS_EXPORT_0: "/exports/music ${GONIC_NFS_ALLOWED:-192.168.2.0/24}(rw,fsid=0,sync,no_subtree_check,insecure)"
     volumes:
       - /srv/gonic/music:/exports/music
       - /run/booted-system/kernel-modules/lib/modules:/lib/modules:ro
